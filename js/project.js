@@ -6,72 +6,111 @@
 // Don’t be afraid to write code that you know you will have to remove later. Create temporary elements (buttons, links, etc) that trigger events if real data is not available. For example, if you’re trying to figure out how to change some text when the game is over but you haven’t solved the win/lose game logic, you can create a button to simulate that until then.
 
 $(document).ready(function() {
-
-
+//!!!! even or odd to determine player
+//!!!! when counter gets to 9 then board resets
   var counter = 0;
+
+  // GLOBAL WIN COUNTER TESTS
+  // var p1Counter = 0;
+  // var p2Counter = 0;
+
   // Array is created to check against player classes to determine winner.
   var player1Array = [];
   var player2Array = [];
   // if a box is clicked counter is up by one
   // if another box is clicked counter goes down by one
 
-  // CHECKING HORIZONTALS
-  var checkWin = function(playerArray, winner) {
+  var resetGame = function() {
+    counter = 0;
+    player1Array = [];
+    player2Array = [];
+    $('div.box').removeClass('player1');
+    $('div.box').removeClass('player2');
 
-    if (playerArray.includes("#1") && playerArray.includes("#2"), playerArray.includes ("#3")) {
-      alert(winner + " wins");
-    // } else
-    // if (playerArray.includes("#4" && "#5" && "#6")) {
-    //   alert(winner + " wins");
-    // } else
-    // if (playerArray.includes("#7" && "#8" && "#9")) {
-    //   alert(winner + " wins");
-    // } else
-    //
-    // // CHECKING VERTICALS
-    // if (playerArray.includes("#1" && "#4" && "#7")) {
-    //   alert(winner + " wins");
-    // } else
-    // if (playerArray.includes("#2" && "#5" && "#8")) {
-    //   alert(winner + " wins");
-    // } else
-    // if (playerArray.includes("#3" && "#6" && "#9")) {
-    //   alert(winner + " wins");
-    // } else
-    //
-    // // CHECKING DIAGONALS
-    //
-    // if (playerArray.includes("#7" && "#5" && "#3")) {
-    //   alert(winner + " wins");
-    // } else
-    // if (playerArray.includes("#9" && "#5" && "#1")) {
-    //   alert(winner + " wins");
-    }
   };
 
+  var checkWin = function(playerArray, winner) {
+  // CHECKING HORIZONTALS
 
-  // Counter alternates between player one and player 2
-  // Changes color once box has been clicked
+           if (playerArray.includes("#1") &&
+               playerArray.includes("#2") &&
+               playerArray.includes("#3")) {
+                alert(winner + " wins");
+                resetGame();
+    } else if (playerArray.includes("#4") &&
+               playerArray.includes("#5") &&
+               playerArray.includes("#6")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (playerArray.includes("#4") &&
+               playerArray.includes("#5") &&
+               playerArray.includes("#6")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (playerArray.includes("#7") &&
+               playerArray.includes("#8") &&
+               playerArray.includes("#9")) {
+                alert(winner + " wins");
+                 resetGame();
+
+     // // CHECKING VERTICALS
+    } else if (playerArray.includes("#1") &&
+               playerArray.includes("#4") &&
+               playerArray.includes("#7")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (playerArray.includes("#2") &&
+               playerArray.includes("#5") &&
+               playerArray.includes("#8")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (playerArray.includes("#3") &&
+               playerArray.includes("#6") &&
+               playerArray.includes("#9")) {
+                alert(winner + " wins");
+                 resetGame();
+
+    // // CHECKING DIAGONALS
+    } else if (playerArray.includes("#7") &&
+               playerArray.includes("#5") &&
+               playerArray.includes("#3")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (playerArray.includes("#9") &&
+               playerArray.includes("#5") &&
+               playerArray.includes("#1")) {
+                alert(winner + " wins");
+                 resetGame();
+    } else if (counter === 9) {
+               alert(" The Game is a Tie!");
+                resetGame();
+    }
+    // GLOBAL WIN COUNTER TESTS
+    // if  (winner === "player 1") {
+    //   p1Counter ++;
+    // console.log(p1Counter);
+    // }
+  };
+
   $(".box").on("click", function() {
-    if (counter < 1) {
+      // Turns off click function after initial click
+    if ($(this).hasClass('player1') || $(this).hasClass('player2')) {
+      return false;
+    }
+
+    if (counter % 2 === 0) {
       counter++;
-      $(this).css('background-color', 'red');
       // Adds the player class
       $(this).addClass('player1');
-      // Turns off click function after initial click
-      $(this).off("click");
       // adds the current boxes id to relevent array
       player1Array.push('#' + this.id);
       // runs function to check win
       checkWin(player1Array, "player 1");
       console.log(player1Array);
-    } else if (counter === 1) {
-      counter -= 1;
-      $(this).css('background-color', 'blue');
+    } else if (counter % 2 !== 0) {
+      counter  ++;
       // Adds the player class
       $(this).addClass('player2');
-      // Turns off click function after initial click
-      $(this).off("click");
       // adds the current boxes id to relevent array
       player2Array.push('#' + this.id);
       // runs function to check win
@@ -79,9 +118,4 @@ $(document).ready(function() {
           console.log(player2Array);
     }
   });
-
-
-
-  // if it is a tie without 3 in a row game calls tie
-
 });
