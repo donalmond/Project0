@@ -10,7 +10,9 @@ background: url(https://image.freepik.com/free-photo/asphalt-texture--grain_19-1
 }
 h1 {
   margin-top:15vh;
+  color:white;
 }
+
 
 .board {
     width: 960px;
@@ -26,4 +28,6 @@ h1 {
 
     background-color: pink;
     color:red;
+    border: 5px solid black;
+    border-radius: 10px;
 }
