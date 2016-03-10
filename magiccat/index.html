@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>Phaser - Making your first game, part 9</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<script type="text/javascript">
+		/////////////////////////////////////////////////////////////////////////////
+		// Pseudocode instructions for me and what I should be working on
+		/////////////////////////////////////////////////////////////////////////////
+
+		// 1.0  work on Enemies
+		// 2.0  Work on win event - change collect item, if all are collected win
+		// 3.0  work on basic loading screen
+		// 4.0  work on game over and play again
+		// 5.0  add story to loading screen
+		// 6.0 if all items are collected load new screen and continue
+		// 7.0 create non error random levels
+
+	// var generateXPosition = function () {
+	//
+	// };
+	//
+	// var generateYPosition = function () {
+	//
+	// };
+
+var generateElements = function ( group, singular, counter ) {
+
+
+	//  We will enable physics for any star that is created in this group
+	group.enableBody = true;
+
+	//  Here we'll create 12 of them evenly spaced apart
+	for (var i = 0; i < counter; i++) {
+		//  Create Random placed star inside of the 'stars' group
+		var xPos = Math.random() * (game.width - 32) + 16;
+		var yPos = Math.random() * (game.height - 32);
+		// Jack helped with this and below to help prevent
+		// random stars being spawned inside the spawn area
+		if (xPos > 0 && xPos < 250 && yPos > 240 && yPos < 600) {
+			xPos += 260;
+			//with absolute (.abs) number will return as the positive
+			// value even if it is a negative
+			//with reference to above numbers
+			//according to below would be
+			//600 = 200, 240 = -160
+			yPos = Math.abs(yPos - 400);
+		}
+		// if position is within( x and y section )
+		var singular = group.create(xPos,
+				yPos, singular)
+			// var star = stars.create(i * 70, 0, 'star');
+
+		//  Let gravity do its thing
+		star.body.gravity.y = 300;
+
+		//  This just gives each star a slightly random bounce value
+		star.body.bounce.y = 0.7 + Math.random() * 0.2;
+	}
+}
+		/////////////////////////////////////////////////////////////////////////////
+
+		var game = new Phaser.Game(1200, 600, Phaser.AUTO, '', {
+			preload: preload,
+			create: create,
+			update: update
+		});
+
+		/////////////////////////////////////////////////////////////////////////////
+		function preload() {
+			/////////////////////////////////////////////////////////////////////////////
+
+			game.load.image('sky', 'assets/sky2.jpg');
+			game.load.image('ground', 'assets/platformhor.png');
+			game.load.image('vert', 'assets/platformvert.png');
+			game.load.image('star', 'assets/marg.png');
+			game.load.image('bug', 'assets/bug.png');
+			game.load.image('homebug', 'assets/bug2.png');
+			game.load.image('spirit', 'assets/spirit.png');
+			// game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+			game.load.spritesheet('catperson', 'assets/catperson1.png', 64, 64);
+		}
+
+		var player = null;
+		var platforms;
+		var cursors;
+		var homeBugCount = 0;
+		var stars;
+		var score = 0;
+		var scoreText;
+		var gamesWon = 0;
+		var gamesWonText;
+		var lives = 3;
+		var livesText;
+		/////////////////////////////////////////////////////////////////////////////
+		function create() {
+			/////////////////////////////////////////////////////////////////////////////
+
+
+
+			//  We're going to be using physics, so enable the Arcade Physics system
+			game.physics.startSystem(Phaser.Physics.ARCADE);
+
+			//  A simple background for our game
+			game.add.sprite(0, 0, 'sky');
+
+			//  The platforms group contains the ground and the 2 ledges we can jump on
+			platforms = game.add.group();
+
+			//  We will enable physics for any object that is created in this group
+			platforms.enableBody = true;
+
+			// Here we create the ground.
+			// had to create 2 as I have rescaled the x axis
+			// fix this later with responsive
+			var ground = platforms.create(0, game.world.height = 600, 'ground');
+			var ground2 = platforms.create(800, game.world.height = 600, 'ground');
+			ground2.body.immovable = true;
+			//  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+			ground.scale.setTo(2, 2);
+
+			//  This stops it from falling away when you jump on it
+			ground.body.immovable = true;
+
+			//  Now let's create two ledges
+			var ledge = platforms.create(400, 400, 'ground');
+			ledge.body.immovable = true;
+
+			ledge = platforms.create(-150, 250, 'ground');
+			ledge.body.immovable = true;
+
+
+			//   ALLOWS FOR RANDOM GENERATED BLOCKS (VERTICAL)
+			// var randBlock = Math.round(-100 + Math.random()*700);
+			// // var randBlockB =
+			vert = platforms.create(150, 400, 'vert');
+			vert.body.immovable = true;
+
+			vert2 = platforms.create(250, 280, 'vert');
+			vert2.scale.setTo(0.5,0.3);
+			vert2.body.immovable = true;
+
+			vert3 = platforms.create(600, -190, 'vert');
+			vert3.body.immovable = true;
+
+			vert4 = platforms.create(1000, 450, 'vert');
+			vert4.body.immovable = true;
+
+			/////////////////////////////////////////////////////////////////////////////
+			//												     PLAYER
+			/////////////////////////////////////////////////////////////////////////////
+
+
+			player = game.add.sprite(64, game.world.height - 150, 'catperson');
+			player.anchor.setTo(0.5, 0.5);
+
+			//  We need to enable physics on the player
+			game.physics.arcade.enable(player);
+
+			//  Player physics properties. Give the little guy a slight bounce.
+			// player.body.bounce.y = 0.2;
+			// player.body.gravity.y = 300;
+			player.body.collideWorldBounds = true;
+
+			//  Our two animations, walking left and right.
+			// player.animations.add('left', [0, 1, 2, 3], 10, true);
+			// player.animations.add('right', [5, 6, 7, 8], 10, true);
+
+			player.animations.add('left', [0, 1, ], 100, true);
+			player.animations.add('right', [0, 1, ], 100, true);
+			player.animations.add('up', [0, 1, ], 100, true);
+			player.animations.add('down', [0, 1, ], 100, true);
+
+
+
+			/////////////////////////////////////////////////////////////////////////////
+			// 													    Points
+			/////////////////////////////////////////////////////////////////////////////
+
+			//  Finally some stars to collect
+			stars = game.add.group();
+
+			//  We will enable physics for any star that is created in this group
+			stars.enableBody = true;
+
+			//  Here we'll create 12 of them evenly spaced apart
+			for (var i = 0; i < 15; i++) {
+				//  Create Random placed star inside of the 'stars' group
+				var xPos = Math.random() * (game.width - 32) + 16;
+				var yPos = Math.random() * (game.height - 32);
+				// Jack helped with this and below to help prevent
+				// random stars being spawned inside the spawn area
+				if (xPos > 0 && xPos < 250 && yPos > 240 && yPos < 600) {
+					xPos += 260;
+					//with absolute (.abs) number will return as the positive
+					// value even if it is a negative
+					//with reference to above numbers
+					//according to below would be
+					//600 = 200, 240 = -160
+					yPos = Math.abs(yPos - 400);
+				}
+				// if position is within( x and y section )
+				var star = stars.create(xPos,
+						yPos, "star")
+					// var star = stars.create(i * 70, 0, 'star');
+
+				//  Let gravity do its thing
+				star.body.gravity.y = 300;
+
+				//  This just gives each star a slightly random bounce value
+				star.body.bounce.y = 0.7 + Math.random() * 0.2;
+			}
+
+
+
+			/////////////////////////////////////////////////////////////////////////////
+			//															ENEMIES
+			/////////////////////////////////////////////////////////////////////////////
+
+
+
+
+			//															 BUG
+			/////////////////////////////////////////////////////////////////////////////
+
+			bugs = game.add.group();
+			bugs.enableBody = true;
+			// sets number of bugs
+			for (var i = 0; i < 3; i++) {
+				var xPosBug = Math.random() * (game.width - 32) + 16;
+				var yPosBug = Math.random() * (game.height - 32);
+				// Jack helped with this and below to help prevent
+				// random stars being spawned inside the spawn area
+				if (xPosBug > 0 && xPosBug < 250 && yPosBug > 240 && yPosBug < 600) {
+					xPosBug += 260;
+					//with absolute (.abs) number will return as the positive
+					// value even if it is a negative
+					//with reference to above numbers
+					//according to below would be
+					//600 = 200, 240 = -160
+					yPosBug = Math.abs(yPos - 400);
+				}
+				// if position is within( x and y section )
+				var bug = bugs.create(xPosBug,
+						yPosBug, "bug")
+				// var bug = bugs.create(i * 70, 200, 'bug');
+				// var bug = bugs.create(Math.random() * (game.width - 32),
+				// 		Math.random() * (game.height - 32), "bug");
+						// apply settings below
+				game.physics.arcade.enable(bug);
+				bug.body.collideWorldBounds = true;
+
+				bug.anchor.setTo(0.5, 0.5);
+
+				bug.angle = 180;
+				bug.animations.add('left', [0, 1], 10, true);
+				bug.animations.add('right', [0, 1], 10, true);
+				bug.body.velocity.x = 300;
+
+				// should reverse enemy on hitting wall
+				bug.body.bounce.x = 1
+			}
+			//
+
+
+			//////////////////////////////////////////////////////////////////////////////											Home Bug
+			////////////////////////////////////////////////////////////////////////////
+			homebugs = game.add.group();
+			homebugs.enableBody = true;
+			// sets number of bugs
+			for (var i = 0; i < 3; i++) {
+				var xPosHomeBug = Math.random() * (game.width - 32) + 16;
+				var yPosHomeBug = Math.random() * (game.height - 32);
+				// Jack helped with this and below to help prevent
+				// random stars being spawned inside the spawn area
+				if (xPosHomeBug > 0 && xPosHomeBug < 250 && yPosHomeBug > 240 && yPosHomeBug < 600) {
+					xPosHomeBug += 260;
+					//with absolute (.abs) number will return as the positive
+					// value even if it is a negative
+					//with reference to above numbers
+					//according to below would be
+					//600 = 200, 240 = -160
+					yPosHomeBug = Math.abs(yPos - 400);
+				}
+				// if position is within( x and y section )
+				var homebug = homebugs.create(xPosHomeBug,
+						yPosHomeBug, "homebug")
+
+			//	var homebug = homebugs.create(1 * 150, 70, 'homebug');
+			// var homebug = homebugs.create(Math.random() * (game.width - 32),
+			// 		Math.random() * (game.height - 32), "homebug");
+
+					// apply settings below
+
+				// turning this off allows the bug to bounce up and down together
+			// game.physics.arcade.enable(homebug);
+			homebug.body.collideWorldBounds = true;
+
+			//prevents sprite from acting strangely on rotate
+			homebug.anchor.setTo(0.5, 0.5);
+			//
+			homebug.angle = 180;
+
+			// sets it to continually bounce
+			homebug.body.bounce.setTo(1, 1);
+			//the velocity axis determines whether it moves horizontal or vertical
+			homebug.body.velocity.y = 200;
+		 }
+
+			//Below is to test homing enemies
+			///////////////////////////////////////////////////////////////////////////
+
+			//  function chasePlayer(homebug) {
+			//  	if (cursors.up.isDown) {                game.physics.arcade.moveToObject(homebug, player, 150);   }        }
+
+			// homebugs.forEach( function(homebug) {
+			// 		this.accelerateToObject(homebug, player, 600, 250, 250);
+			// 	}, game.physics);
+
+
+
+			/////////////////////////////////////////////////////////////////////////////
+			//  												SPIRIT BUTTERFLY
+			/////////////////////////////////////////////////////////////////////////////
+
+			spirits = game.add.group();
+			// sets opacity
+			spirits.alpha = 0.7;
+			spirits.enableBody = true;
+			for (var i = 0; i < 1; i++) {
+				var spirit = spirits.create(i * 70, 500, 'spirit');
+
+			}
+			//
+
+			game.physics.arcade.enable(spirit);
+			spirit.body.collideWorldBounds = true;
+			//
+			spirit.anchor.setTo(0.5, 0.5);
+			//
+			// homebug.angle = 180;
+
+			/////////////////////////////////////////////////////////////////////////////
+			// 													  SCORE, LIVES & CONTROLS
+			/////////////////////////////////////////////////////////////////////////////
+
+			scoreText = game.add.text(16, 16, 'score: ', {
+				fontSize: '32px',
+				fill: 'pink'
+			});
+
+			gamesWonText = game.add.text(950, 16, 'games won: ', {
+				fontSize: '32px',
+				fill: 'pink'
+			});
+
+			livesText = game.add.text(525, 16, 'lives: ', {
+				fontSize: '32px',
+				fill: 'pink'
+			});
+
+
+			//  Our controls.
+			cursors = game.input.keyboard.createCursorKeys();
+
+		}
+
+		/////////////////////////////////////////////////////////////////////////////
+		function update() {
+			/////////////////////////////////////////////////////////////////////////////
+
+			//  Collide the player and the stars with the platforms
+			game.physics.arcade.collide(player, platforms);
+			game.physics.arcade.collide(stars, platforms);
+			game.physics.arcade.collide(homebugs, platforms);
+			game.physics.arcade.collide(bugs, platforms);
+
+			// game.physics.arcade.collide(bugs, spirits);
+			game.physics.arcade.collide(homebugs, vert);
+			game.physics.arcade.collide(bugs, vert);
+			game.physics.arcade.collide(vert);
+
+			//  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+			game.physics.arcade.overlap(player, stars, collectStar, null, this);
+
+			// Player overlap with enemies
+			game.physics.arcade.overlap(player, bugs, enemyKill, null, this);
+			game.physics.arcade.overlap(player, homebugs, enemyKill, null, this);
+
+			/////////////////////////////////////////////////////////////////////////////
+			//  Reset the players velocity (movement)
+			/////////////////////////////////////////////////////////////////////////////
+
+			if (cursors.left.isDown) {
+				//  Move to the left
+				player.body.velocity.x = -150;
+
+				player.animations.play('left');
+				// player.angle = 180;
+				player.angle = 270;
+
+			} else if (cursors.right.isDown) {
+				//  Move to the right
+				player.body.velocity.x = 150;
+
+				player.animations.play('right');
+				// player.angle = 0;
+				player.angle = 90;
+
+			} else if (cursors.up.isDown) {
+				//  Move up.
+				player.body.velocity.y = -150;
+
+				player.animations.play('up');
+				player.angle = 0;
+
+				// player.angle = 270;
+			} else if (cursors.down.isDown) {
+				//  Move down
+				player.body.velocity.y = 150;
+
+				player.animations.play('down');
+				// player.angle = 90;
+				player.angle = 180;
+
+			} else {
+				//  Stand still
+				player.animations.stop();
+				player.body.velocity.x = 0;
+				player.body.velocity.y = 0;
+
+				player.frame = 4;
+			}
+
+
+
+
+			/////////////////////////////////////////////////////////////////////////////
+			//                       Spirit follows mouse
+			/////////////////////////////////////////////////////////////////////////////
+
+			if (game.input.mousePointer.isDown) {
+				//  First is the callback
+				//  Second is the context in which the callback runs, in this case game.physics.arcade
+				//  Third is the parameter the callback expects - it is always sent the Group child as the first parameter
+
+
+
+				spirits.forEach(game.physics.arcade.moveToPointer, game.physics.arcade, false, 200);
+			} else {
+				spirits.setAll('body.velocity.x', 0);
+				spirits.setAll('body.velocity.y', 0);
+			}
+
+			/////////////////////////////////////////////////////////////////////////////
+
+			// Shows lives initially
+			livesText.text = 'lives: ' + lives;
+
+			/////////////////////////////////////////////////////////////////////////////
+			// 												    	Death
+			/////////////////////////////////////////////////////////////////////////////
+			//     Allows bug to kill player
+		}
+
+		function enemyKill(player, bug) {
+			//Kills player
+			player.kill();
+			//Resets the player to initial position on death
+			player.reset(70, 450);
+
+			// reduces a life
+			lives -= 1;
+			livesText.text = 'lives: ' + lives;
+
+			//  Reset the score
+			score = 0;
+			scoreText.text = 'score: ' + score;
+
+			// If The Player is killed the stars wipe
+			if (player.kill()) {
+				stars.forEach(function(star) {
+					star.kill();
+				}, this);
+			}
+			// Stars are now respawned
+			for (var i = 0; i < 15; i++) {
+				//  Create Random placed star inside of the 'stars' group
+				var star = stars.create(Math.random() * (game.width - 32),
+						Math.random() * (game.height - 32), "star")
+					// var star = stars.create(i * 70, 0, 'star');
+
+				//  Let gravity do its thing
+				star.body.gravity.y = 300;
+
+				//  This just gives each star a slightly random bounce value
+				star.body.bounce.y = 0.7 + Math.random() * 0.2;
+
+				//////////////////////////////////////////////////////////////////////////////		       			Terms for game over function
+				////////////////////////////////////////////////////////////////////////////
+
+				if (lives === 0) {
+					alert('Game Over!')
+					player.kill();
+					player.reset(70, 450);
+					score = 0;
+					scoreText.text = 'Score: ' + score;
+					for (var i = 0; i < 15; i++) {
+						//  Create Random placed star inside of the 'stars' group
+						var star = stars.create(Math.random() * (game.width - 32),
+								Math.random() * (game.height - 32), "star")
+							// var star = stars.create(i * 70, 0, 'star');
+
+						//  Let gravity do its thing
+						star.body.gravity.y = 300;
+
+						//  This just gives each star a slightly random bounce value
+						star.body.bounce.y = 0.7 + Math.random() * 0.2;
+					generateElements(bugs, "bug", 2);
+					}
+					// resets running tally of games won
+					gamesWon = 0;
+					gamesWonText.text = 'games won: ' + gamesWon;
+					// sets lives back to 3
+					lives = 3;
+					livesText.text = 'lives: ' + lives;
+				}
+			}
+
+			// Respawns the player (now visible again)
+			player.revive();
+		}
+
+		////////////////////////////////////////////////////////////////////////////
+		//										Collecting to win
+		////////////////////////////////////////////////////////////////////////////
+
+		function collectStar(player, star) {
+
+			// Removes the star from the screen
+			star.kill();
+
+			//  Add and update the score
+			score += 10;
+			scoreText.text = 'score: ' + score;
+			////////////////////////////////////////////////////////////////////////////
+			// Winning terms if score is reached
+			////////////////////////////////////////////////////////////////////////////
+			if (score === 150) {
+				alert("You Win");
+				player.kill();
+				player.reset(70, 450);
+				score = 0;
+				scoreText.text = 'Score: ' + score;
+				for (var i = 0; i < 15; i++) {
+					//  Create Random placed star inside of the 'stars' group
+					var star = stars.create(Math.random() * (game.width - 32),
+							Math.random() * (game.height - 32), "star")
+						// var star = stars.create(i * 70, 0, 'star');
+
+					//  Let gravity do its thing
+					star.body.gravity.y = 300;
+
+					//  This just gives each star a slightly random bounce value
+					star.body.bounce.y = 0.7 + Math.random() * 0.2;
+
+				}
+				// adds a running tally of games won
+				gamesWon += 1;
+				gamesWonText.text = 'games won: ' + gamesWon;
+			}
+
+
+
+
+		}
+	</script>
+
+</body>
+
+</html>
